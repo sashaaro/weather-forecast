@@ -1,0 +1,26 @@
+extends layout/main.pug
+
+block content
+    div(class="row marketing")
+        h4 Список
+        table(class="table")
+            thead
+                tr
+                    td ID
+                    td Город
+                    td Период
+                    td Позиция
+                    td Код
+                    td
+            tbody
+            each widget in widgets
+                tr
+                    td= widget.id
+                    td= widget.cityTitle
+                    td= widget.period
+                    td= widget.positionTitle
+                    td
+                        textarea
+                            <script crossorigin="anonymous" src="http://localhost/script.js"></script>
+                    td
+                        a(href='/edit/' + widget.id class="btn btn-sm btn-info") Ред.

@@ -1,0 +1,45 @@
+extends layout/main.pug
+
+block content
+    form(method='post')
+        div.form-group
+            label Город
+            select.form-control(name="city")
+                each city, index in cities
+                    option(value=index selected= (widget.city = index) ? true : false)= city
+        div.form-group
+            label На сколько дней выдавать прогноз
+            select.form-control(name="period")
+                each period in periods
+                    option(value=period)= period
+        div.form-group
+            label Положение блока на странице
+            select.form-control(name="position")
+                each position, index in positions
+                    option(value=index)= position
+        button(type="submit" class="btn btn-primary")= (widget.id ? 'Редактировать #' + widget.id  : 'Добавить')
+
+    if widget.id
+        div(style="border: 1px solid #CDCDCD;")
+            div.weather-forecast(data-id=widget.id)
+                em
+                div.list
+        script.
+            var block = document.querySelector('.weather-forecast[data-id="#{widget.id}"]')
+            var widgetID = block.getAttribute('data-id')
+            fetch('http://localhost:3000/widget/' + widgetID).then(function(response) {
+                return response.json()
+            }).then(function(response) {
+                console.log(response)
+                block.querySelector('em').innerHTML = response.cityTitle
+                var listHtml = ''
+                response.forecast.forEach(function(item) {
+                    listHtml += '<div style="border: 1px solid #CDCDCD;">' +
+                        '<span>+34 c</span>' +
+                        '<span>12 июня (среда)</span>' +
+                        '</div>'
+                })
+                block.querySelector('div.list').innerHTML = listHtml
+            })
+            console.log(block)
+
