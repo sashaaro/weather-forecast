@@ -17,6 +17,11 @@ class WidgetRepository {
         this.redis.set('last_id', id)
     }
 
+    async findByUserID(id) {
+        const list = await this.findAll()
+        return list.filter((widget) => { return widget.user === id })
+    }
+
     /**
      * @return {Promise.<Array<Widget>>}
      */
@@ -28,6 +33,7 @@ class WidgetRepository {
             const widget = new Widget()
             widget.id = widgetData.id
             widget.city = widgetData.city
+            widget.user = widgetData.user
             widget.period = widgetData.period
             widget.position = widgetData.position
 
@@ -43,7 +49,7 @@ class WidgetRepository {
     /**
      * @return {Promise.<Widget>}
      */
-    async findById(id) {
+    async findOneById(id) {
         const list = await this.findAll()
         const filtered = list.filter((widget) => { return widget.id === id })
         return filtered ? filtered[0] : null

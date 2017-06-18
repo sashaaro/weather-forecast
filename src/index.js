@@ -1,38 +1,124 @@
 const express = require('express')
 const pug = require('pug');
 const Widget = require('./models/Widget')
+const User = require('./models/User')
 const WidgetRepository = require('./components/WidgetRepository')
+const fetchWeatherForeCase = require('./components/fetchWeatherForeCase')
 const bodyParser = require('body-parser')
-const request = require('request');
-
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const mongoose = require('mongoose');
 const app = express()
 
 const projectParameters = require('../parameters.json')
 
 app.use(express.static('public'));
-app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    //cookie: { secure: true }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
+
+
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+    done(null, user);
+});
+
+const verifyCallBack = (username, password, done) => {
+    User.findOne({ name: username }, (err, user) => {
+        if (err) { return done(err); }
+        if (!user) {
+            return done(null, false, { message: 'Incorrect username.' });
+        }
+        if (user.password !== password) {
+            return done(null, false, { message: 'Incorrect password.' });
+        }
+        return done(null, user);
+    });
+}
+
+const localStrategy = new LocalStrategy(verifyCallBack)
+passport.use(localStrategy)
 
 const widgetRepository = new WidgetRepository()
 const formCompiledFunction = pug.compileFile('templates/form.pug');
 
 app.get('/', async (req, res) => {
+    if (!req.user) {
+        return res.redirect('/login')
+    }
     const compiledFunction = pug.compileFile('templates/index.pug');
-    const widgets = await widgetRepository.findAll()
+    const widgets = await widgetRepository.findByUserID(req.user._id)
     res.send(compiledFunction({
-        pageTitle: 'Список виджетов',
-        widgets: widgets,
-        projectParameters: projectParameters
+        req,
+        widgets,
+        projectParameters,
+        pageTitle: 'Список виджетов'
     }))
 })
 
+app.post('/login', passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }));
+
+app.get('/logout', (req, res) => {
+    req.logout();
+    res.redirect('/');
+});
+
+app.get('/login', (req, res) => {
+    res.send(pug.compileFile('templates/login.pug')({req}))
+});
+
+app.route('/sign-up').all(async (req, res) => {
+    if (req.user) {
+        return res.redirect('/')
+    }
+    const user = new User({});
+
+    let errors = {};
+    if  (req.method === 'POST') {
+        user.name = req.body.name
+        user.password = req.body.password
+
+        errors = user.validateSync()
+        if (!errors) {
+            user.save((err, user) => {
+                req.login(user, (error) => {
+                    if (err) { return next(err); }
+                    return res.redirect('/');
+                })
+            })
+            return;
+        }
+    }
+
+    res.send(pug.compileFile('templates/sign-up.pug')({
+        req,
+        user,
+        errors: errors.errors
+    }))
+})
 
 app.route('/add').all(async (req, res) => {
+    if (!req.user) {
+        return res.redirect('/login')
+    }
+
     const widget = new Widget()
 
     if  (req.method === 'POST') {
+        widget.user = req.user._id
         widget.city = parseInt(req.body.city)
         widget.period = parseInt(req.body.period)
         widget.position = parseInt(req.body.position)
@@ -41,21 +127,31 @@ app.route('/add').all(async (req, res) => {
         res.redirect('/');
     } else {
         res.send(formCompiledFunction({
+            req,
+            widget,
             pageTitle: 'Добавить новый виджет',
             cities: Widget.allowedCities(),
             periods: Widget.allowedPeriods(),
-            positions: Widget.allowedPositions(),
-            widget: widget
+            positions: Widget.allowedPositions()
         }))
     }
 })
 
 app.route('/edit/:id').all(async (req, res) => {
-    const widget = await widgetRepository.findById(parseInt(req.params.id))
+    if (!req.user) {
+        return res.redirect('/login')
+    }
+
+    const widget = await widgetRepository.findOneById(parseInt(req.params.id))
 
     if (!widget) {
         res.status(404);
         res.send({ error: 'Not found' });
+        return;
+    }
+    if (req.user._id !==  widget.user) {
+        res.status(405);
+        res.send({ error: 'No access' });
         return;
     }
 
@@ -68,54 +164,28 @@ app.route('/edit/:id').all(async (req, res) => {
         res.redirect('/')
     } else {
         res.send(formCompiledFunction({
+            req,
+            widget,
             pageTitle: 'Редактировать виджет',
             cities: Widget.allowedCities(),
             periods: Widget.allowedPeriods(),
-            positions: Widget.allowedPositions(),
-            widget: widget
+            positions: Widget.allowedPositions()
         }))
     }
 })
 
 
-const apiKey = '76e5edb3c65806e097cb33987239ea05'
-const cities = [
-    'Moscow',
-    'Saint Petersburg',
-    'Nizhniy Novgorod'
-]
-
-const getForeCaseList = (widget) => {
-    return new Promise((resolve) => {
-        const city = cities[widget.city]
-        const url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+city+',ru&lang=ru&units=metric&cnt='+widget.period+'&appid=' + apiKey
-        request(url, (error, response, body) => {
-            const forecastList = [];
-            body = JSON.parse(body)
-            for (let i = 0; i < body.list.length; i++) {
-                const forecast = body.list[i]
-                forecastList.push({
-                    dt: forecast.dt,
-                    temp: forecast.temp.day,
-                    description: forecast.weather ? forecast.weather[0].description : null,
-                    speed: forecast.speed
-                })
-            }
-            resolve(forecastList)
-        })
-    })
-}
-app.route('/widget/:id').get(async (req, res) => {
+app.route('/widget/:id').get(async (req, res) => { // TODO by unique secret token
     res.header("Access-Control-Allow-Origin", "*");
 
-    const widget = await widgetRepository.findById(parseInt(req.params.id))
+    const widget = await widgetRepository.findOneById(parseInt(req.params.id))
     if (!widget) {
         res.status(404);
         res.send({ error: 'Not found' });
         return;
     }
 
-    const forecast = await getForeCaseList(widget)
+    const forecast = await fetchWeatherForeCase(widget, projectParameters.openWeatherApiKey)
     res.send({
         widget,
         forecast,
@@ -123,4 +193,11 @@ app.route('/widget/:id').get(async (req, res) => {
     })
 })
 
-app.listen(3000)
+
+mongoose.connect('mongodb://localhost/weather-forecast');
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+
+db.once('open', function() {
+    app.listen(3000)
+});

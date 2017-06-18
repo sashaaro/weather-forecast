@@ -9,9 +9,10 @@
  mv parameters.json.dist parameters.json
  ~~~
 
- Run redis
+ Run redis and mongo
  ~~~
   docker run --rm -p 6379:6379 redis
+  docker run --rm -p 27017:27017 mongo
  ~~~
  
  Run project on 3000 port

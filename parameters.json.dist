@@ -1,3 +1,4 @@
 {
-  "domain": "localhost:3000"
+  "domain": "localhost",
+  "openWeatherApiKey": "76e5edb3c65806e097cb33987239ea05"
 }

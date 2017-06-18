@@ -23,7 +23,7 @@ block content
         button(type="submit" class="btn btn-primary")= (widget.id ? 'Редактировать #' + widget.id  : 'Добавить')
 
     if widget.id
-        h4 Example
+        h4 Пример
         script(src="/init_widget_script.js")
         link(href="/widget.css", rel="stylesheet")
         div.weather-forecast(data-id=widget.id)

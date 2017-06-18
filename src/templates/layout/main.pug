@@ -9,8 +9,16 @@ html(lang="en")
             div(class="header clearfix")
                 nav
                     ul(class="nav nav-pills float-right")
-                        li(class="nav-item")
-                            a(class="nav-link" href="/add") Добавить новый
+                        if req.user
+                            li(class="nav-item")
+                                a(class="nav-link" href="/add") Добавить новый
+                            li(class="nav-item")
+                                a(class="nav-link" href="/logout") Выход (#{req.user.name})
+                        else
+                            li(class="nav-item")
+                                a(class="nav-link" href="/login") Вход
+                            li(class="nav-item")
+                                a(class="nav-link" href="/sign-up") Регистрация
                 h3(class="text-muted")
                     a(href="/") Виджеты прогноза погоды
 

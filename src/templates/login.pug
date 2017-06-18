@@ -1,0 +1,15 @@
+extends layout/main.pug
+
+block content
+    h3 Вход
+
+    form(method='post')
+        div.form-group
+            label Имя
+            input(name="username").form-control
+        div.form-group
+            label Пароль
+            input(type="password", name="password").form-control
+            if errors && errors.password
+                small(class="form-text text-muted")= errors.password.message
+        button(type="submit" class="btn btn-primary") Вход

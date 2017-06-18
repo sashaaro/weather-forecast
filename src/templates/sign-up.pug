@@ -1,0 +1,17 @@
+extends layout/main.pug
+
+block content
+    h3 Регистрация
+
+    form(method='post')
+        div.form-group
+            label Имя
+            input(name="name", value=user.name).form-control
+            if errors && errors.name
+                small(class="form-text text-muted")= errors.name.message
+        div.form-group
+            label Пароль
+            input(type="password", name="password", value=user.password).form-control
+            if errors && errors.password
+                small(class="form-text text-muted")= errors.password.message
+        button(type="submit" class="btn btn-primary") Зарегистрироваться

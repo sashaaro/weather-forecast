@@ -4,6 +4,7 @@ class Widget {
         this.city = null
         this.period = null
         this.position = null
+        this.user = null
     }
 
     get cityTitle () {
