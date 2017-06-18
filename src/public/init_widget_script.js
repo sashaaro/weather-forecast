@@ -6,11 +6,12 @@ var initWeatherForeCastWidget = function(widgetID) {
     }).then(function(response) {
         var html = '<em>' + response.cityTitle + '</em>'
         html += '<div class="list">'
-
-        response.forecast.forEach(function(item) {
+        response.forecast.forEach(function(day) {
+            var date = (new Date(day.dt)).toLocaleString("ru", {month: 'long', day: 'numeric'})
             html += '<div class="day">' +
-                '<span>+34 c</span>' +
-                '<span>12 июня (среда)</span>' +
+                '<div>' + date + '</div>' +
+                '<div>'+ day.temp +' °C</div>' +
+                '<div>Ветер '+ day.speed +' м/с. ' + day.description  +'</div>' +
                 '</div>'
         })
         html += '</div>'

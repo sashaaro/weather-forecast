@@ -1,7 +1,7 @@
 const express = require('express')
 const pug = require('pug');
 const Widget = require('./models/Widget')
-const WidgetManager = require('./components/WidgetManager')
+const WidgetRepository = require('./components/WidgetRepository')
 const bodyParser = require('body-parser')
 const request = require('request');
 
@@ -13,12 +13,12 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
 
-const widgetManager = new WidgetManager()
+const widgetRepository = new WidgetRepository()
 const formCompiledFunction = pug.compileFile('templates/form.pug');
 
 app.get('/', async (req, res) => {
     const compiledFunction = pug.compileFile('templates/index.pug');
-    const widgets = await widgetManager.findAll()
+    const widgets = await widgetRepository.findAll()
     res.send(compiledFunction({
         pageTitle: 'Список виджетов',
         widgets: widgets
@@ -34,7 +34,7 @@ app.route('/add').all(async (req, res) => {
         widget.period = parseInt(req.body.period)
         widget.position = parseInt(req.body.position)
 
-        await widgetManager.save(widget)
+        await widgetRepository.save(widget)
         res.redirect('/');
     } else {
         res.send(formCompiledFunction({
@@ -48,7 +48,7 @@ app.route('/add').all(async (req, res) => {
 })
 
 app.route('/edit/:id').all(async (req, res) => {
-    const widget = await widgetManager.findById(parseInt(req.params.id))
+    const widget = await widgetRepository.findById(parseInt(req.params.id))
 
     if (!widget) {
         res.status(404);
@@ -61,7 +61,7 @@ app.route('/edit/:id').all(async (req, res) => {
         widget.period = parseInt(req.body.period)
         widget.position = parseInt(req.body.position)
 
-        await widgetManager.save(widget)
+        await widgetRepository.save(widget)
         res.redirect('/')
     } else {
         res.send(formCompiledFunction({
@@ -79,7 +79,7 @@ app.route('/edit/:id').all(async (req, res) => {
 app.route('/widget/:id').get(async (req, res) => {
     res.header("Access-Control-Allow-Origin", "*");
 
-    const widget = await widgetManager.findById(parseInt(req.params.id))
+    const widget = await widgetRepository.findById(parseInt(req.params.id))
 
     if (!widget) {
         res.status(404);
@@ -89,17 +89,29 @@ app.route('/widget/:id').get(async (req, res) => {
 
     const apiKey = '76e5edb3c65806e097cb33987239ea05'
 
-    const url = 'http://api.openweathermap.org/data/2.5/weather?q=Moscow,ru&appid=' + apiKey
+    const cities = [
+        'Moscow',
+        'Saint Petersburg',
+        'Nizhniy Novgorod'
+    ]
+    const city = cities[widget.city]
+    const url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+city+',ru&lang=ru&units=metric&cnt='+widget.period+'&appid=' + apiKey
     request(url, (error, response, body) => {
-        //const forecast = JSON.parse(body)
-        const forecast = [];
-        for (let i = 0; i < widget.period; i++) {
-            forecast.push(1)
+        const forecastList = [];
+        body = JSON.parse(body)
+        for (let i = 0; i < body.list.length; i++) {
+            const forecast = body.list[i]
+            forecastList.push({
+                dt: forecast.dt,
+                temp: forecast.temp.day,
+                description: forecast.weather ? forecast.weather[0].description : null,
+                speed: forecast.speed
+            })
         }
         res.send({
             widget: widget,
             cityTitle: widget.cityTitle,
-            forecast: forecast
+            forecast: forecastList
         })
     })
 })

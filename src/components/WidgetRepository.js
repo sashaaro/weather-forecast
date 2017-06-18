@@ -1,7 +1,7 @@
 const Redis = require('ioredis');
 const Widget = require('../models/Widget');
 
-class WidgetManager {
+class WidgetRepository {
     constructor() {
         this.redis = new Redis();
     }
