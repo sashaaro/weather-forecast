@@ -20,26 +20,11 @@ block content
         button(type="submit" class="btn btn-primary")= (widget.id ? 'Редактировать #' + widget.id  : 'Добавить')
 
     if widget.id
-        div(style="border: 1px solid #CDCDCD;")
-            div.weather-forecast(data-id=widget.id)
-                em
-                div.list
+        h4 Example
+        script(src="/init_widget_script.js")
+        link(href="/widget.css", rel="stylesheet")
+        div.weather-forecast(data-id=widget.id)
         script.
-            var block = document.querySelector('.weather-forecast[data-id="#{widget.id}"]')
-            var widgetID = block.getAttribute('data-id')
-            fetch('http://localhost:3000/widget/' + widgetID).then(function(response) {
-                return response.json()
-            }).then(function(response) {
-                console.log(response)
-                block.querySelector('em').innerHTML = response.cityTitle
-                var listHtml = ''
-                response.forecast.forEach(function(item) {
-                    listHtml += '<div style="border: 1px solid #CDCDCD;">' +
-                        '<span>+34 c</span>' +
-                        '<span>12 июня (среда)</span>' +
-                        '</div>'
-                })
-                block.querySelector('div.list').innerHTML = listHtml
-            })
-            console.log(block)
+            initWeatherForeCastWidget(#{widget.id})
+
 

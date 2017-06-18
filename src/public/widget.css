@@ -1,0 +1,11 @@
+.weather-forecast .day {
+    border: 1px solid #CDCDCD;
+}
+
+.weather-forecast.vertical .day {
+    display: block;
+}
+
+.weather-forecast.horizontal .day {
+    display: inline-block;
+}

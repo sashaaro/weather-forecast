@@ -21,6 +21,9 @@ block content
                     td= widget.positionTitle
                     td
                         textarea
-                            <script crossorigin="anonymous" src="http://localhost/script.js"></script>
+                            <script src="http://localhost/init_widget_script.js"></script>
+                            <link href="http://localhost/widget.css" rel="stylesheet">
+                            <div class="weather-forecast vertical" data-id="#{widget.id}"></div>
+                            <script>initWeatherForeCastWidget(#{widget.id})</script>
                     td
                         a(href='/edit/' + widget.id class="btn btn-sm btn-info") Ред.

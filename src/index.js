@@ -77,6 +77,8 @@ app.route('/edit/:id').all(async (req, res) => {
 
 
 app.route('/widget/:id').get(async (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+
     const widget = await widgetManager.findById(parseInt(req.params.id))
 
     if (!widget) {
