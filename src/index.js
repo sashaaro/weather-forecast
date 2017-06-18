@@ -7,6 +7,8 @@ const request = require('request');
 
 const app = express()
 
+const projectParameters = require('../parameters.json')
+
 app.use(express.static('public'));
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -21,7 +23,8 @@ app.get('/', async (req, res) => {
     const widgets = await widgetRepository.findAll()
     res.send(compiledFunction({
         pageTitle: 'Список виджетов',
-        widgets: widgets
+        widgets: widgets,
+        projectParameters: projectParameters
     }))
 })
 
