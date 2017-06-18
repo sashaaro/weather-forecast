@@ -73,4 +73,4 @@ class WidgetRepository {
     }
 }
 
-module.exports = WidgetManager
+module.exports = WidgetRepository

@@ -6,17 +6,20 @@ block content
             label Город
             select.form-control(name="city")
                 each city, index in cities
-                    option(value=index selected= (widget.city = index) ? true : false)= city
+                    - var selected = widget.city == index
+                    option(value=index selected=selected)= city
         div.form-group
             label На сколько дней выдавать прогноз
             select.form-control(name="period")
                 each period in periods
-                    option(value=period)= period
+                    - var selected = widget.period == period
+                    option(value=period selected=selected)= period
         div.form-group
             label Положение блока на странице
             select.form-control(name="position")
                 each position, index in positions
-                    option(value=index)= position
+                    - var selected = widget.position == index
+                    option(value=index selected=selected)= position
         button(type="submit" class="btn btn-primary")= (widget.id ? 'Редактировать #' + widget.id  : 'Добавить')
 
     if widget.id
