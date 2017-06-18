@@ -7,11 +7,12 @@ var initWeatherForeCastWidget = function(widgetID) {
         var html = '<em>' + response.cityTitle + '</em>'
         html += '<div class="list">'
         response.forecast.forEach(function(day) {
-            var date = (new Date(day.dt)).toLocaleString("ru", {month: 'long', day: 'numeric'})
+            var date = (new Date(day.dt * 1000)).toLocaleString("ru", {month: 'long', day: 'numeric'})
             html += '<div class="day">' +
                 '<div>' + date + '</div>' +
                 '<div>'+ day.temp +' °C</div>' +
-                '<div>Ветер '+ day.speed +' м/с. ' + day.description  +'</div>' +
+                '<div>' + day.description  +'</div>' +
+                '<div>Ветер '+ day.speed +' м/с.</div>' +
                 '</div>'
         })
         html += '</div>'

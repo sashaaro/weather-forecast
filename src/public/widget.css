@@ -1,5 +1,6 @@
 .weather-forecast .day {
     border: 1px solid #CDCDCD;
+    padding: 5px;
 }
 
 .weather-forecast.vertical .day {

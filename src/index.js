@@ -75,44 +75,48 @@ app.route('/edit/:id').all(async (req, res) => {
 })
 
 
+const apiKey = '76e5edb3c65806e097cb33987239ea05'
+const cities = [
+    'Moscow',
+    'Saint Petersburg',
+    'Nizhniy Novgorod'
+]
 
+const getForeCaseList = (widget) => {
+    return new Promise((resolve) => {
+        const city = cities[widget.city]
+        const url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+city+',ru&lang=ru&units=metric&cnt='+widget.period+'&appid=' + apiKey
+        request(url, (error, response, body) => {
+            const forecastList = [];
+            body = JSON.parse(body)
+            for (let i = 0; i < body.list.length; i++) {
+                const forecast = body.list[i]
+                forecastList.push({
+                    dt: forecast.dt,
+                    temp: forecast.temp.day,
+                    description: forecast.weather ? forecast.weather[0].description : null,
+                    speed: forecast.speed
+                })
+            }
+            resolve(forecastList)
+        })
+    })
+}
 app.route('/widget/:id').get(async (req, res) => {
     res.header("Access-Control-Allow-Origin", "*");
 
     const widget = await widgetRepository.findById(parseInt(req.params.id))
-
     if (!widget) {
         res.status(404);
         res.send({ error: 'Not found' });
         return;
     }
 
-    const apiKey = '76e5edb3c65806e097cb33987239ea05'
-
-    const cities = [
-        'Moscow',
-        'Saint Petersburg',
-        'Nizhniy Novgorod'
-    ]
-    const city = cities[widget.city]
-    const url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+city+',ru&lang=ru&units=metric&cnt='+widget.period+'&appid=' + apiKey
-    request(url, (error, response, body) => {
-        const forecastList = [];
-        body = JSON.parse(body)
-        for (let i = 0; i < body.list.length; i++) {
-            const forecast = body.list[i]
-            forecastList.push({
-                dt: forecast.dt,
-                temp: forecast.temp.day,
-                description: forecast.weather ? forecast.weather[0].description : null,
-                speed: forecast.speed
-            })
-        }
-        res.send({
-            widget: widget,
-            cityTitle: widget.cityTitle,
-            forecast: forecastList
-        })
+    const forecast = await getForeCaseList(widget)
+    res.send({
+        widget,
+        forecast,
+        cityTitle: widget.cityTitle,
     })
 })
 
