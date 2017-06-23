@@ -6,7 +6,7 @@
  
  Set params
  ~~~
- mv parameters.json.dist parameters.json
+ cp parameters.json.dist parameters.json
  ~~~
 
  Run redis and mongo
